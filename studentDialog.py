@@ -17,7 +17,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QDateEdit, QDialog,
     QFrame, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QSizePolicy, QVBoxLayout, QWidget)
+    QPushButton, QSizePolicy, QVBoxLayout, QWidget, QMessageBox)
+
+import mysql.connector 
+from random import randint
+from datetime import datetime
 
 class Ui_StudentsDialog(QDialog):
     def __init__(self, parent=None):
@@ -236,10 +240,10 @@ class Ui_StudentsDialog(QDialog):
         self.add_cancel_button_h_Layout = QHBoxLayout(self.widget1)
         self.add_cancel_button_h_Layout.setObjectName(u"add_cancel_button_h_Layout")
         self.add_cancel_button_h_Layout.setContentsMargins(0, 0, 0, 0)
-        self.add_student_button = QPushButton(self.widget1)
-        self.add_student_button.setObjectName(u"add_student_button")
-        self.add_student_button.setMinimumSize(QSize(0, 41))
-        self.add_student_button.setStyleSheet(u"QPushButton{\n"
+        self.saveStudent_btn = QPushButton(self.widget1)
+        self.saveStudent_btn.setObjectName(u"add_student_button")
+        self.saveStudent_btn.setMinimumSize(QSize(0, 41))
+        self.saveStudent_btn.setStyleSheet(u"QPushButton{\n"
 "	background-color: #34D481;\n"
 "	color:white;\n"
 "	border: none;\n"
@@ -248,7 +252,7 @@ class Ui_StudentsDialog(QDialog):
 "	font-size: 15px;\n"
 "}")
 
-        self.add_cancel_button_h_Layout.addWidget(self.add_student_button)
+        self.add_cancel_button_h_Layout.addWidget(self.saveStudent_btn)
 
         self.cancel_button = QPushButton(self.widget1)
         self.cancel_button.setObjectName(u"cancel_button")
@@ -296,7 +300,138 @@ class Ui_StudentsDialog(QDialog):
         self.addres_label.setText(QCoreApplication.translate("StudentsDialog", u"Address", None))
         self.phone_label.setText(QCoreApplication.translate("StudentsDialog", u"Phone Number", None))
         self.email_label.setText(QCoreApplication.translate("StudentsDialog", u"E-mail", None))
-        self.add_student_button.setText(QCoreApplication.translate("StudentsDialog", u"Add Student", None))
+        self.saveStudent_btn.setText(QCoreApplication.translate("StudentsDialog", u"Add Student", None))
         self.cancel_button.setText(QCoreApplication.translate("StudentsDialog", u"Cancel", None))
     # retranslateUi
 
+        # Add a new pupil when you press a button
+        self.saveStudent_btn.clicked.connect(self.add_student)
+        self.cancel_button.clicked.connect(self.close())
+
+    # CREATE DATABASE CONECTOR
+    def create_connection(self):
+        # Replace these with your actual mysql server details
+        host_name = "localhost"
+        user_name = "root"
+        my_password = ""
+        database_name = "my_school"
+
+        # Estabilish a connection to MySQL server
+        self.mydb = mysql.connector.connect(
+            host = host_name,
+            user = user_name,
+            password = my_password,
+        )
+
+        # Create a cursor to execute SQL queries
+        cursor = self.mydb.cursor()
+
+        # Create the database if it doesn´t exist
+        cursor.execute(f"CREATE DATABASE IF NOT EXISTS {database_name}")
+
+        # Connect to the created database
+        self.mydb = mysql.connector.connect(
+            host = host_name,
+            user = user_name,
+            password = my_password, 
+            database = database_name
+        )
+        return self.mydb
+    
+    # INSERT NEW STUDENT 
+    def insert_new_student(self):
+        try:
+            # Create connection
+            cursor = self.create_connection().cursor()
+
+            gender = self.gender_comboBox.currentText()
+            student_id = self.generate_studentId(gender)
+
+            birthday = self.handleDateChange()
+
+            # Assuming birthday is a QDate object
+            birth_date = self.birth_dateEdit.date()
+            age = self.calculate_age(birth_date)
+
+            # Create a list of students information
+            self.new_student = [
+                self.name_lineEdit.text(),
+                student_id,
+                self.gender_comboBox.currentText(),
+                self.class_comboBox.currentText(),
+                birthday,
+                age,
+                self.addres_lineEdit.text(),
+                self.phonelineEdit.text(),
+                self.email_lineEdit.text()
+           ] 
+            
+            # To insert multiple rows in the mysql database
+            insert_student_query = f""" INSERT INTO students_table (names, student_id, gender, class, birthday, age, address, phone_number,  email) VALUES(%S, %S, %S, %S, %S, %S, %S, %S, %S)"""
+
+            cursor.execute(insert_student_query, self.new_student)
+            self.show_inserted_message()
+            self.mydb.commit()
+            self.mydb.close()
+
+        except mysql.connector.Error as err:
+            # Handle mysql error
+            print(f"Error: {err}")
+
+    def generate_studentId(self, gender):
+        cursor = self.create_connection().cursor()
+
+        while True:
+            if gender == "Male":
+                id_start_value = '24' + '/U/M'
+            else:
+                id_start_value = '24' + '/U/F'
+
+            random_value = self.generate_ramdonNumber()
+            student_id = id_start_value + random_value
+
+            # Check if the generated student id is already in the table
+            cursor.execute(f"SELECT student_id FROM students_table WHERE student_id = %s", (student_id))
+            existing_id = cursor.fetchone()
+
+            if not existing_id:
+                return student_id
+
+    def generate_ramdonNumber(self):
+        number = randint(1, 1000)
+        random_number = f"{number:04d}"
+        return random_number
+
+    def handleDateChange(self):
+        # Convert QDate to a string in the format 'YYYY-MM-DD'
+        selected_date = self.birth_dateEdit.date()
+        self.date_string = selected_date.toString(Qt.ISODate)
+        
+        return self.date_string
+    
+    def calculate_age(self, birth_date):
+        # get the current date
+        current_date = datetime.now().date()
+
+        # Create a date object for the birthdate
+        birth_datetime = datetime(birth_date.year(), birth_date.month(), birth_date.day())
+
+        # Calculate the difference in years
+        age = current_date.year - birth_datetime.year
+
+        # Check if the birthday has occured this year
+        if (current_date.month, current_date.day) < (birth_datetime.month, birth_datetime.day):
+            age -= 1
+            
+        return age
+    
+    def show_inserted_message(self):
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("Success")
+        msg_box.setText(self.name_lineEdit.text() + " inserted into the database")
+        msg_box.exec()
+
+
+    def add_student(self):
+        self.insert_new_student()
+        self.accept()
