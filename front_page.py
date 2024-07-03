@@ -3,6 +3,8 @@ from PySide6.QtGui import QAction
 # from matplotlib.pylab import f
 from ui_index import Ui_MainWindow
 
+import mysql.connector
+
 class MySideBar(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
@@ -52,6 +54,12 @@ class MySideBar(QMainWindow, Ui_MainWindow):
         self.students_1.clicked.connect(self.students_context_menu)
         self.teacher_1.clicked.connect(self.teachers_context_menu)
         self.finance_1.clicked.connect(self.finances_context_menu)
+
+        # Connect to mysql server and create database if it doesnt exist
+        self.create_connection()
+
+        # Create students table
+        self.create_students_table()
 
 
     # Methods to switch to different pages
@@ -125,7 +133,6 @@ class MySideBar(QMainWindow, Ui_MainWindow):
         menu.move(button.mapToGlobal(button.rect().topRight()))
         menu.exec()
 
-
     def handle_menu_item_click(self):
         # Recevie text menu 
         text = self.sender().text()
@@ -149,10 +156,60 @@ class MySideBar(QMainWindow, Ui_MainWindow):
         elif text == "Business Overview":
             self.switch_to_business_overview_page()
 
+    # CREATE DATABASE CONECTOR
+    def create_connection(self):
+        # Replace these with your actual mysql server details
+        host_name = "localhost"
+        user_name = "root"
+        my_password = ""
+        database_name = "my_school"
+
+        # Estabilish a connection to MySQL server
+        self.mydb = mysql.connector.connect(
+            host = host_name,
+            user = user_name,
+            password = my_password,
+        )
+
+        # Create a cursor to execute SQL queries
+        cursor = self.mydb.cursor()
+
+        # Create the database if it doesn´t exist
+        cursor.execute(f"CREATE DATABASE IF NOT EXISTS {database_name}")
+
+        # Connect to the created database
+        self.mydb = mysql.connector.connect(
+            host = host_name,
+            user = user_name,
+            password = my_password, 
+            database = database_name
+        )
+        return self.mydb
+    
+    # CREATE STUDENTS TABLE
+    def create_students_table(self):
+        # Create a cursor for executing SQL queries
+        cursor = self.create_connection().cursor()
+
+        # The query
+        create_students_table_query = f"""
+            CREATE TABLE IF NOT EXISTS students_table(
+                names TEXT,
+                student_id VARCHAR(15) PRIMARY KEY,
+                gender TEXT,
+                class TEXT,
+                birthday TEXT,
+                age INT,
+                address TEXT,
+                phone_number VARCHAR(15),
+                email VARCHAR(15)
+            )"""
         
+        cursor.execute(create_students_table_query)
 
-
-
+        # Commit changes and close the connection
+        self.mydb.commit()
+        self.mydb.close()
 
 
 
