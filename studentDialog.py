@@ -16,7 +16,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QDateEdit, QDialog,
-    QFrame, QHBoxLayout, QLabel, QLineEdit,
+    QFrame, QHBoxLayout, QLabel, QLineEdit, 
     QPushButton, QSizePolicy, QVBoxLayout, QWidget, QMessageBox)
 
 import mysql.connector 
@@ -281,7 +281,7 @@ class Ui_StudentsDialog(QDialog):
         self.name_label.setText(QCoreApplication.translate("StudentsDialog", u"Full Name", None))
         self.gender_label.setText(QCoreApplication.translate("StudentsDialog", u"Select Gender", None))
         self.gender_comboBox.setItemText(0, QCoreApplication.translate("StudentsDialog", u"Male", None))
-        self.gender_comboBox.setItemText(1, QCoreApplication.translate("StudentsDialog", u"Famale", None))
+        self.gender_comboBox.setItemText(1, QCoreApplication.translate("StudentsDialog", u"Female", None))
 
         self.class_label.setText(QCoreApplication.translate("StudentsDialog", u"Select Class", None))
         self.class_comboBox.setItemText(0, QCoreApplication.translate("StudentsDialog", u"Grade 1", None))
