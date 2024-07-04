@@ -695,7 +695,7 @@ class Ui_MainWindow(object):
         __qtablewidgetitem9 = QTableWidgetItem()
         self.student_info_table.setHorizontalHeaderItem(9, __qtablewidgetitem9)
         self.student_info_table.setObjectName(u"student_info_table")
-        self.student_info_table.setGeometry(QRect(20, 200, 891, 531))
+        self.student_info_table.setGeometry(QRect(20, 200, 930, 531))
         self.student_info_table.setMinimumSize(QSize(891, 0))
         self.student_info_table.setStyleSheet(u"QHeaderView::section{\n"
 "	font-weight: bold;\n"
