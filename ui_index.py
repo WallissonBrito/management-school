@@ -925,7 +925,7 @@ class Ui_MainWindow(object):
         self.pushButton.toggled.connect(self.icon_text_widget.setHidden)
         self.pushButton.toggled.connect(self.icon_only_widget.setVisible)
 
-        self.stackedWidget.setCurrentIndex(2)
+        self.stackedWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
