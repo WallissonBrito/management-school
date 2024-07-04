@@ -1,5 +1,6 @@
-from PySide6.QtWidgets import QMainWindow, QMenu
-from PySide6.QtGui import QAction
+from PySide6.QtWidgets import (QMainWindow, QMenu, QTableWidgetItem, QWidget, QHBoxLayout, 
+                               QVBoxLayout, QPushButton)
+from PySide6.QtGui import QAction, QIcon
 # from matplotlib.pylab import f
 from ui_index import Ui_MainWindow
 
@@ -61,7 +62,25 @@ class MySideBar(QMainWindow, Ui_MainWindow):
         # Create students table
         self.create_students_table()
 
+        # Open add students dialog
         self.add_student_btn.clicked.connect(self.open_addStudent_dialog)
+
+        # load student information to QTable
+        self.load_students_info()
+        self.select_class.currentIndexChanged.connect(self.load_students_info())
+        self.select_gender.currentIndexChanged.connect(self.load_students_info())        
+
+        # Control column widhts
+        self.student_info_table.setColumnWidth(0, 120)
+        self.student_info_table.setColumnWidth(1, 80)
+        self.student_info_table.setColumnWidth(2, 60)
+        self.student_info_table.setColumnWidth(3, 70)
+        self.student_info_table.setColumnWidth(4, 70)
+        self.student_info_table.setColumnWidth(5, 70)
+        self.student_info_table.setColumnWidth(6, 70)
+        self.student_info_table.setColumnWidth(7, 80)
+        self.student_info_table.setColumnWidth(8, 120)
+        self.student_info_table.setColumnWidth(9, 150)
 
 
     # Methods to switch to different pages
@@ -223,5 +242,80 @@ class MySideBar(QMainWindow, Ui_MainWindow):
         if result == Ui_StudentsDialog.accepted:
             # if the dialog was accepted (user clicked add student button)
             pass
+
+    def load_students_info(self):
+        # Clear existing data in the table
+        self.student_info_table.setRowCount(0)
+
+        # Fetch data based on the selected class and gender in the combo boxes
+        selected_class = self.select_class.currentText()
+        selected_gender = self.select_gender.currentText()
+        data = self.get_data_from_table(selected_class, selected_gender)
+
+        # Populate the table with the filtered data
+        for row_index, row_data in enumerate(data):
+            self.student_info_table.insertRow(row_index)
+            for col_index, cell_data in enumerate(row_data):
+                item = QTableWidgetItem(str(cell_data))
+                self.student_info_table.setItem(row_index, col_index, item)
+
+                # Create a custom widget with two buttons lined up horizontally for the actions columns
+                double_button_widget = DoubleButtonWidgetStudents(row_index, row_data)
+
+                # Set this custom widget with two buttons as the cell widget for the actions column
+                self.student_info_table.setCellWidget(row_index, 9, double_button_widget)
+                self.student_info_table.setRowHeight(row_index, 50)
+
+    def get_data_from_table(self, class_filter, gender_filter):
+        cursor = self.create_connection().cursor()
+
+        # Construct the sql query based on the selected filters
+        query = f"""SELECT * FROM `students_table` WHERE 
+        ('{class_filter}' = 'SELECT CLASS' OR class = '{class_filter}') AND
+        ('{gender_filter}' = 'SELECT GENDER' OR gender = '{gender_filter}')"""
+
+        cursor.execute(query)
+        data = cursor.fetchall()
+        return data
+    
+    # DOUBLE BUTTON CLASS
+class DoubleButtonWidgetStudents(QWidget):
+    def __init__(self, row_index, row_data):
+        super().__init__()
+
+        # Store the row index and row data as an instance in variables
+        self.row_index = row_index
+        self.row_data = row_data
+
+        # Get Student variables from the tuple
+        self.studante_name = self.row_data[0]
+        self.student_id = self.row_data[1]
+
+        layout = QHBoxLayout(self)
+
+        # Create the blue edit button
+        self.edit_button = QPushButton("",self)
+        self.edit_button.setStyleSheet("background-color:blue;")
+        self.edit_button.setFixedSize(61, 31)
+
+        # Create the red edit button   
+        self.delete_button = QPushButton("",self)
+        self.delete_button.setStyleSheet("background-color:red;")
+        self.delete_button.setFixedSize(61, 31)
+
+        # Set icon for the edit button
+        icon_edit = QIcon()
+        icon_edit.addFile(u":/newPrefix/icons/edit.png")
+        self.edit_button.setIcon(icon_edit)
+        
+        # Set icon for delete the button
+        icon_delete = QIcon()
+        icon_delete.addFile(u":/newPrefix/icons/delete.png")
+        self.delete_button.setIcon(icon_delete)
+
+        layout.addWidget(self.edit_button)
+        layout.addWidget(self.delete_button)
+
+
 
 
