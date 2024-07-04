@@ -61,6 +61,8 @@ class MySideBar(QMainWindow, Ui_MainWindow):
         # Create students table
         self.create_students_table()
 
+        self.add_student_btn.clicked.connect(self.open_addStudent_dialog)
+
 
     # Methods to switch to different pages
     def switch_to_dashboard_page(self):
@@ -211,6 +213,15 @@ class MySideBar(QMainWindow, Ui_MainWindow):
         self.mydb.commit()
         self.mydb.close()
 
+    def open_addStudent_dialog(self):
+        from studentDialog import Ui_StudentsDialog
+        
+        # instatiate and show the dialog
+        addStudent_dialog = Ui_StudentsDialog(self)
+        result = addStudent_dialog.exec() # This will block until the dialog is closed
 
+        if result == Ui_StudentsDialog.accepted:
+            # if the dialog was accepted (user clicked add student button)
+            pass
 
 

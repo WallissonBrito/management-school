@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QDateEdit, QDialog,
     QPushButton, QSizePolicy, QVBoxLayout, QWidget, QMessageBox)
 
 import mysql.connector 
+from mysql.connector import errorcode
 from random import randint
 from datetime import datetime
 
@@ -306,7 +307,7 @@ class Ui_StudentsDialog(QDialog):
 
         # Add a new pupil when you press a button
         self.saveStudent_btn.clicked.connect(self.add_student)
-        self.cancel_button.clicked.connect(self.close())
+        self.cancel_button.clicked.connect(self.close)
 
     # CREATE DATABASE CONECTOR
     def create_connection(self):
@@ -342,7 +343,11 @@ class Ui_StudentsDialog(QDialog):
     def insert_new_student(self):
         try:
             # Create connection
-            cursor = self.create_connection().cursor()
+            con = self.create_connection()
+            if con  is None:
+                return
+            
+            cursor = con.cursor()
 
             gender = self.gender_comboBox.currentText()
             student_id = self.generate_studentId(gender)
@@ -365,18 +370,29 @@ class Ui_StudentsDialog(QDialog):
                 self.phonelineEdit.text(),
                 self.email_lineEdit.text()
            ] 
-            
-            # To insert multiple rows in the mysql database
-            insert_student_query = f""" INSERT INTO students_table (names, student_id, gender, class, birthday, age, address, phone_number,  email) VALUES(%S, %S, %S, %S, %S, %S, %S, %S, %S)"""
 
+            # To insert multiple rows in the mysql database
+            insert_student_query = """
+            INSERT INTO students_table (names, student_id, gender, class, birthday, age, address, phone_number, email) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
             cursor.execute(insert_student_query, self.new_student)
             self.show_inserted_message()
-            self.mydb.commit()
-            self.mydb.close()
+            con.commit()
 
         except mysql.connector.Error as err:
-            # Handle mysql error
-            print(f"Error: {err}")
+            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                print("Algo está errado com o seu nome de usuário ou senha")
+            elif err.errno == errorcode.ER_BAD_DB_ERROR:
+                print("Banco de dados não existe")
+            else:
+                print(err)
+
+        finally:
+            if cursor:
+                cursor.close()
+            if self.mydb:
+                con.close()
 
     def generate_studentId(self, gender):
         cursor = self.create_connection().cursor()
@@ -391,11 +407,11 @@ class Ui_StudentsDialog(QDialog):
             student_id = id_start_value + random_value
 
             # Check if the generated student id is already in the table
-            cursor.execute(f"SELECT student_id FROM students_table WHERE student_id = %s", (student_id))
+            cursor.execute(F"SELECT student_id FROM students_table WHERE student_id = '{student_id}'")
             existing_id = cursor.fetchone()
 
             if not existing_id:
-                return student_id
+                return student_id   
 
     def generate_ramdonNumber(self):
         number = randint(1, 1000)
