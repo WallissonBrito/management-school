@@ -993,7 +993,7 @@ class Ui_MainWindow(object):
         self.pdf_export_btn.setText(QCoreApplication.translate("MainWindow", u"Export to PDF", None))
         self.select_gender.setItemText(0, QCoreApplication.translate("MainWindow", u"SELECT GENDER", None))
         self.select_gender.setItemText(1, QCoreApplication.translate("MainWindow", u"Male", None))
-        self.select_gender.setItemText(2, QCoreApplication.translate("MainWindow", u"Famale", None))
+        self.select_gender.setItemText(2, QCoreApplication.translate("MainWindow", u"Female", None))
 
         self.select_class.setItemText(0, QCoreApplication.translate("MainWindow", u"SELECT CLASS", None))
         self.select_class.setItemText(1, QCoreApplication.translate("MainWindow", u"Grade 1", None))
