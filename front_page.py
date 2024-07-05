@@ -67,8 +67,8 @@ class MySideBar(QMainWindow, Ui_MainWindow):
 
         # load student information to QTable
         self.load_students_info()
-        self.select_class.currentIndexChanged.connect(self.load_students_info())
-        self.select_gender.currentIndexChanged.connect(self.load_students_info())        
+        self.select_class.currentIndexChanged.connect(self.reload_students_table_data)
+        self.select_gender.currentIndexChanged.connect(self.reload_students_table_data)      
 
         # Control column widhts
         self.student_info_table.setColumnWidth(0, 120)
@@ -239,9 +239,13 @@ class MySideBar(QMainWindow, Ui_MainWindow):
         addStudent_dialog = Ui_StudentsDialog(self)
         result = addStudent_dialog.exec() # This will block until the dialog is closed
 
-        if result == Ui_StudentsDialog.accepted:
+        if result == Ui_StudentsDialog.Accepted:
             # if the dialog was accepted (user clicked add student button)
-            pass
+            self.reload_students_table_data()
+
+    def reload_students_table_data(self):
+        # This method is called to reload the table
+        self.load_students_info() 
 
     def load_students_info(self):
         # Clear existing data in the table
@@ -296,7 +300,7 @@ class DoubleButtonWidgetStudents(QWidget):
         # Create the blue edit button
         self.edit_button = QPushButton("",self)
         self.edit_button.setStyleSheet("background-color:blue;")
-        self.edit_button.setFixedSize(61, 31)
+        self.edit_button.setFixedSize(51, 31)
 
         # Create the red edit button   
         self.delete_button = QPushButton("",self)
